@@ -1,7 +1,7 @@
 // Rally Timing - API Client
 // Centralized fetch wrapper for all backend calls
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5050/api';
 
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -68,6 +68,20 @@ const RunsAPI = {
     create: (data) => apiRequest('/runs', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => apiRequest(`/runs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => apiRequest(`/runs/${id}`, { method: 'DELETE' }),
+    addPenalty: (runId, data) => apiRequest(`/runs/${runId}/penalties`, { method: 'POST', body: JSON.stringify(data) }),
+    removePenalty: (runId, penaltyId) => apiRequest(`/runs/${runId}/penalties/${penaltyId}`, { method: 'DELETE' }),
+};
+
+// --- Categories ---
+const CategoriesAPI = {
+    list: (search = '') => {
+        const params = search ? `?search=${encodeURIComponent(search)}` : '';
+        return apiRequest(`/categories${params}`);
+    },
+    get: (id) => apiRequest(`/categories/${id}`),
+    create: (data) => apiRequest('/categories', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => apiRequest(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => apiRequest(`/categories/${id}`, { method: 'DELETE' }),
 };
 
 // --- Rankings ---

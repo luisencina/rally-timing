@@ -179,22 +179,31 @@ async function loadTodayRuns() {
         const tbody = document.getElementById('today-runs');
 
         if (runs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin pasadas hoy</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Sin pasadas hoy</td></tr>';
             return;
         }
 
-        tbody.innerHTML = runs.map(r => `
+        tbody.innerHTML = runs.map(r => {
+            const hasPenalty = r.penalty_total_ms > 0;
+            const penaltyBadge = hasPenalty
+                ? `<span class="badge badge-wet">+${formatTime(r.penalty_total_ms)}</span>`
+                : '<span style="color:var(--text-muted)">-</span>';
+            const finalClass = hasPenalty ? 'time-cell" style="color:var(--warning)' : 'time-cell';
+
+            return `
             <tr>
                 <td>${r.pilot_name || '-'}</td>
                 <td>${r.car_name || '-'}</td>
                 <td class="time-cell">${formatTime(r.total_time_ms)}</td>
+                <td>${penaltyBadge}</td>
+                <td class="${finalClass}">${formatTime(r.final_time_ms)}</td>
                 <td><span class="badge badge-${r.track_condition}">${CONDITION_LABELS[r.track_condition]}</span></td>
-                <td>${r.source === 'stopwatch' ? 'Crono' : 'Manual'}</td>
                 <td>
+                    <button class="btn btn-secondary btn-sm" onclick="openPenaltyModal(${r.id})">Penal.</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteRun(${r.id})">Invalidar</button>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -205,6 +214,88 @@ async function deleteRun(id) {
     try {
         await RunsAPI.delete(id);
         showToast('Pasada invalidada');
+        loadTodayRuns();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+// --- Penalties ---
+let currentPenaltyRunId = null;
+
+async function openPenaltyModal(runId) {
+    currentPenaltyRunId = runId;
+    document.getElementById('penalty-modal').classList.add('active');
+    document.getElementById('penalty-form').reset();
+    await refreshPenaltyModal();
+}
+
+function closePenaltyModal() {
+    document.getElementById('penalty-modal').classList.remove('active');
+    currentPenaltyRunId = null;
+}
+
+async function refreshPenaltyModal() {
+    try {
+        const run = await RunsAPI.get(currentPenaltyRunId);
+
+        document.getElementById('penalty-run-info').innerHTML =
+            `<strong>${run.pilot_name}</strong> - ${run.car_name} | ` +
+            `Tiempo: <span class="time-cell">${formatTime(run.total_time_ms)}</span>` +
+            (run.penalty_total_ms > 0
+                ? ` + <span style="color:var(--warning)">${formatTime(run.penalty_total_ms)}</span> = <strong>${formatTime(run.final_time_ms)}</strong>`
+                : '');
+
+        const listEl = document.getElementById('penalty-list');
+        if (run.penalties.length === 0) {
+            listEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Sin penalizaciones</p>';
+        } else {
+            listEl.innerHTML = run.penalties.map(p => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:var(--bg-input);border-radius:var(--radius);margin-bottom:0.5rem;">
+                    <div>
+                        <span class="badge badge-wet">+${formatTime(p.time_ms)}</span>
+                        <span style="margin-left:0.5rem;font-size:0.85rem;">${p.reason}</span>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="removePenalty(${p.id})">Quitar</button>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function savePenalty(e) {
+    e.preventDefault();
+    const timeMs = timeToMs(
+        document.getElementById('pen-min').value,
+        document.getElementById('pen-sec').value,
+        document.getElementById('pen-ms').value
+    );
+    const reason = document.getElementById('pen-reason').value.trim();
+
+    if (timeMs <= 0) {
+        showToast('El tiempo de penalizacion debe ser mayor a 0', 'error');
+        return;
+    }
+
+    try {
+        await RunsAPI.addPenalty(currentPenaltyRunId, { time_ms: timeMs, reason });
+        showToast(`Penalizacion agregada: +${formatTime(timeMs)}`);
+        document.getElementById('penalty-form').reset();
+        await refreshPenaltyModal();
+        loadTodayRuns();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function removePenalty(penaltyId) {
+    if (!confirm('Quitar esta penalizacion?')) return;
+    try {
+        await RunsAPI.removePenalty(currentPenaltyRunId, penaltyId);
+        showToast('Penalizacion eliminada');
+        await refreshPenaltyModal();
         loadTodayRuns();
     } catch (err) {
         showToast(err.message, 'error');

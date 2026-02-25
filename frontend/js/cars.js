@@ -42,8 +42,24 @@ async function loadPilotOptions() {
     }
 }
 
+async function loadCategoryOptions() {
+    try {
+        const categories = await CategoriesAPI.list();
+        // Filter select in page
+        const filterSelect = document.getElementById('filter-category');
+        filterSelect.innerHTML = '<option value="">Todas las categorias</option>' +
+            categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        // Modal select
+        const modalSelect = document.getElementById('car-category');
+        modalSelect.innerHTML = '<option value="">Seleccionar...</option>' +
+            categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    } catch (err) {
+        console.error('Error loading categories:', err);
+    }
+}
+
 async function openCarModal(car = null) {
-    await loadPilotOptions();
+    await Promise.all([loadPilotOptions(), loadCategoryOptions()]);
     editingCarId = car ? car.id : null;
     document.getElementById('car-modal-title').textContent = car ? 'Editar Auto' : 'Agregar Auto';
     document.getElementById('car-id').value = car ? car.id : '';
@@ -113,4 +129,6 @@ async function deleteCar(id, name) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadCars);
+document.addEventListener('DOMContentLoaded', () => {
+    loadCategoryOptions().then(loadCars);
+});

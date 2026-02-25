@@ -77,6 +77,7 @@ function renderNav() {
         { href: 'index.html', label: 'Dashboard', icon: '&#9776;' },
         { href: 'pilots.html', label: 'Pilotos', icon: '&#9823;' },
         { href: 'cars.html', label: 'Autos', icon: '&#9951;' },
+        { href: 'categories.html', label: 'Categorias', icon: '&#9881;' },
         { href: 'runs.html', label: 'Pasadas', icon: '&#9201;' },
         { href: 'rankings.html', label: 'Rankings', icon: '&#9733;' },
     ];

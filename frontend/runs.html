@@ -99,16 +99,58 @@
                             <th>Piloto</th>
                             <th>Auto</th>
                             <th>Tiempo</th>
+                            <th>Penal.</th>
+                            <th>Final</th>
                             <th>Condicion</th>
-                            <th>Fuente</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="today-runs">
-                        <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+                        <tr><td colspan="7" class="empty-state">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Penalty Modal -->
+    <div class="modal-overlay" id="penalty-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Penalizaciones</h2>
+                <button class="modal-close" onclick="closePenaltyModal()">&times;</button>
+            </div>
+            <div id="penalty-run-info" style="margin-bottom:1rem;color:var(--text-muted);font-size:0.9rem;"></div>
+
+            <!-- Existing penalties -->
+            <div id="penalty-list" style="margin-bottom:1rem;"></div>
+
+            <!-- Add penalty form -->
+            <h3 style="font-size:1rem;margin-bottom:0.75rem;">Agregar penalizacion</h3>
+            <form id="penalty-form" onsubmit="savePenalty(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Minutos</label>
+                        <input type="number" id="pen-min" min="0" max="59" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Segundos</label>
+                        <input type="number" id="pen-sec" min="0" max="59" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Milisegundos</label>
+                        <input type="number" id="pen-ms" min="0" max="999" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo *</label>
+                    <input type="text" id="pen-reason" required placeholder="Ej: Salida falsa, toque de cono...">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePenaltyModal()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
         </div>
     </div>
 

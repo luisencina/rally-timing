@@ -201,7 +201,19 @@ async function loadPilotHistory() {
     }
 }
 
+async function loadCategoryFilter() {
+    try {
+        const categories = await CategoriesAPI.list();
+        const select = document.getElementById('filter-category');
+        select.innerHTML = '<option value="">Todas</option>' +
+            categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    } catch (err) {
+        console.error('Error loading categories:', err);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    loadCategoryFilter();
     loadRankings();
     loadRecords();
     loadPilotOptions();
