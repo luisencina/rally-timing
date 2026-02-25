@@ -76,6 +76,27 @@ class Car(db.Model):
         }
 
 
+class Category(db.Model):
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
 VALID_TRACK_CONDITIONS = ("dry", "wet", "humid")
 VALID_SOURCES = ("manual", "stopwatch")
 
@@ -96,13 +117,27 @@ class Run(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
+    penalties = db.relationship("Penalty", backref="run", lazy=True)
+
+    @property
+    def penalty_total_ms(self):
+        return sum(p.time_ms for p in self.penalties)
+
+    @property
+    def final_time_ms(self):
+        return self.total_time_ms + self.penalty_total_ms
+
     def to_dict(self):
+        penalty_ms = self.penalty_total_ms
         return {
             "id": self.id,
             "pilot_id": self.pilot_id,
             "car_id": self.car_id,
             "run_date": self.run_date,
             "total_time_ms": self.total_time_ms,
+            "penalty_total_ms": penalty_ms,
+            "final_time_ms": self.total_time_ms + penalty_ms,
+            "penalties": [p.to_dict() for p in self.penalties],
             "track_condition": self.track_condition,
             "car_category": self.car_category,
             "notes": self.notes,
@@ -110,6 +145,25 @@ class Run(db.Model):
             "source": self.source,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class Penalty(db.Model):
+    __tablename__ = "penalties"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    run_id = db.Column(db.Integer, db.ForeignKey("runs.id"), nullable=False)
+    time_ms = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "run_id": self.run_id,
+            "time_ms": self.time_ms,
+            "reason": self.reason,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 

@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from ..models import (
     db,
     Run,
+    Penalty,
     Pilot,
     Car,
     SyncLog,
@@ -162,3 +163,54 @@ def delete_run(run_id):
     log_sync("runs", run.id, "delete")
     db.session.commit()
     return success({"message": "Pasada invalidada"})
+
+
+# --- Penalties ---
+
+@runs_bp.route("/<int:run_id>/penalties", methods=["GET"])
+def list_penalties(run_id):
+    run = Run.query.get(run_id)
+    if not run:
+        return error("Pasada no encontrada", 404)
+    return success([p.to_dict() for p in run.penalties])
+
+
+@runs_bp.route("/<int:run_id>/penalties", methods=["POST"])
+def add_penalty(run_id):
+    run = Run.query.get(run_id)
+    if not run or not run.is_valid:
+        return error("Pasada no encontrada", 404)
+
+    data = request.get_json()
+    if not data:
+        return error("Datos requeridos")
+
+    time_ms = data.get("time_ms")
+    reason = data.get("reason", "").strip()
+
+    if not time_ms or not isinstance(time_ms, int) or time_ms <= 0:
+        return error("time_ms debe ser un entero positivo (milisegundos)")
+    if not reason:
+        return error("El motivo de la penalizacion es requerido")
+
+    penalty = Penalty(run_id=run_id, time_ms=time_ms, reason=reason)
+    db.session.add(penalty)
+    db.session.flush()
+    log_sync("penalties", penalty.id, "create")
+    db.session.commit()
+
+    return success(enrich_run(run), 201)
+
+
+@runs_bp.route("/<int:run_id>/penalties/<int:penalty_id>", methods=["DELETE"])
+def remove_penalty(run_id, penalty_id):
+    penalty = Penalty.query.filter_by(id=penalty_id, run_id=run_id).first()
+    if not penalty:
+        return error("Penalizacion no encontrada", 404)
+
+    db.session.delete(penalty)
+    log_sync("penalties", penalty_id, "delete")
+    db.session.commit()
+
+    run = Run.query.get(run_id)
+    return success(enrich_run(run))
