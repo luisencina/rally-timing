@@ -1,0 +1,559 @@
+{
+	"info": {
+		"name": "Rally Timing API",
+		"description": "API de cronometraje y ranking para rally amateur - Rally Innovation Lab Paraguay",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5050/api",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pilotos",
+			"item": [
+				{
+					"name": "Listar pilotos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pilots",
+							"host": ["{{base_url}}"],
+							"path": ["pilots"],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar por nombre, apellido o apodo",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener piloto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pilots/1",
+							"host": ["{{base_url}}"],
+							"path": ["pilots", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear piloto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Carlos\",\n    \"last_name\": \"Martinez\",\n    \"nickname\": \"Carlitos\",\n    \"phone\": \"+595981123456\",\n    \"email\": \"carlos@email.com\",\n    \"license_number\": \"PY-2024-001\",\n    \"notes\": \"Piloto experimentado\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pilots",
+							"host": ["{{base_url}}"],
+							"path": ["pilots"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar piloto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Carlos Alberto\",\n    \"nickname\": \"Carlitos Jr\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pilots/1",
+							"host": ["{{base_url}}"],
+							"path": ["pilots", "1"]
+						}
+					}
+				},
+				{
+					"name": "Desactivar piloto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pilots/1",
+							"host": ["{{base_url}}"],
+							"path": ["pilots", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Autos",
+			"item": [
+				{
+					"name": "Listar autos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cars",
+							"host": ["{{base_url}}"],
+							"path": ["cars"],
+							"query": [
+								{
+									"key": "pilot_id",
+									"value": "1",
+									"description": "Filtrar por piloto",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "N",
+									"description": "Filtrar por categoria",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener auto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cars/1",
+							"host": ["{{base_url}}"],
+							"path": ["cars", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear auto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Toyota\",\n    \"model\": \"Yaris GR\",\n    \"year\": 2023,\n    \"plate_number\": \"ABC-123\",\n    \"category\": \"N\",\n    \"pilot_id\": 1,\n    \"notes\": \"Auto preparado para rally\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cars",
+							"host": ["{{base_url}}"],
+							"path": ["cars"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar auto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"category\": \"A\",\n    \"notes\": \"Cambio de categoria\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cars/1",
+							"host": ["{{base_url}}"],
+							"path": ["cars", "1"]
+						}
+					}
+				},
+				{
+					"name": "Desactivar auto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cars/1",
+							"host": ["{{base_url}}"],
+							"path": ["cars", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Categorias",
+			"item": [
+				{
+					"name": "Listar categorias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["categories"],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar por nombre",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener categoria",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear categoria",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"N\",\n    \"description\": \"Nacional - Autos de serie con modificaciones menores\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["categories"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar categoria",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nacional\",\n    \"description\": \"Autos de serie con modificaciones menores\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						}
+					}
+				},
+				{
+					"name": "Desactivar categoria",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pasadas",
+			"item": [
+				{
+					"name": "Listar pasadas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/runs",
+							"host": ["{{base_url}}"],
+							"path": ["runs"],
+							"query": [
+								{
+									"key": "pilot_id",
+									"value": "1",
+									"description": "Filtrar por piloto",
+									"disabled": true
+								},
+								{
+									"key": "date",
+									"value": "2026-03-15",
+									"description": "Filtrar por fecha",
+									"disabled": true
+								},
+								{
+									"key": "condition",
+									"value": "dry",
+									"description": "Filtrar por condicion (dry/wet/humid)",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "N",
+									"description": "Filtrar por categoria",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener pasada",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/runs/1",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1"]
+						}
+					}
+				},
+				{
+					"name": "Registrar pasada (manual)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pilot_id\": 1,\n    \"car_id\": 1,\n    \"run_date\": \"2026-03-15\",\n    \"total_time_ms\": 154567,\n    \"track_condition\": \"dry\",\n    \"notes\": \"Buena pasada, mejoro en curva 3\",\n    \"source\": \"manual\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/runs",
+							"host": ["{{base_url}}"],
+							"path": ["runs"]
+						}
+					}
+				},
+				{
+					"name": "Registrar pasada (stopwatch)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pilot_id\": 1,\n    \"car_id\": 1,\n    \"run_date\": \"2026-03-15\",\n    \"total_time_ms\": 148230,\n    \"track_condition\": \"dry\",\n    \"source\": \"stopwatch\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/runs",
+							"host": ["{{base_url}}"],
+							"path": ["runs"]
+						}
+					}
+				},
+				{
+					"name": "Corregir pasada",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"total_time_ms\": 155000,\n    \"notes\": \"Tiempo corregido\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/runs/1",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1"]
+						}
+					}
+				},
+				{
+					"name": "Invalidar pasada",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/runs/1",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Penalizaciones",
+			"item": [
+				{
+					"name": "Listar penalizaciones de pasada",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/runs/1/penalties",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1", "penalties"]
+						}
+					}
+				},
+				{
+					"name": "Agregar penalizacion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"time_ms\": 5000,\n    \"reason\": \"Derribo de cono en curva 2\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/runs/1/penalties",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1", "penalties"]
+						}
+					}
+				},
+				{
+					"name": "Quitar penalizacion",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/runs/1/penalties/1",
+							"host": ["{{base_url}}"],
+							"path": ["runs", "1", "penalties", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Rankings",
+			"item": [
+				{
+					"name": "Mejores tiempos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/best-times",
+							"host": ["{{base_url}}"],
+							"path": ["rankings", "best-times"],
+							"query": [
+								{
+									"key": "condition",
+									"value": "dry",
+									"description": "Filtrar por condicion",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "N",
+									"description": "Filtrar por categoria",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Historial de piloto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/history/1",
+							"host": ["{{base_url}}"],
+							"path": ["rankings", "history", "1"]
+						}
+					}
+				},
+				{
+					"name": "Records del tramo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/records",
+							"host": ["{{base_url}}"],
+							"path": ["rankings", "records"]
+						}
+					}
+				},
+				{
+					"name": "Resumen (Dashboard)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/summary",
+							"host": ["{{base_url}}"],
+							"path": ["rankings", "summary"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

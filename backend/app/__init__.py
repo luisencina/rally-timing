@@ -1,8 +1,10 @@
+from flasgger import Swagger
 from flask import Flask
 from flask_cors import CORS
 
 from .config import Config
 from .models import db
+from .swagger_config import SWAGGER_CONFIG, SWAGGER_TEMPLATE
 
 
 def create_app(config_class=Config):
@@ -11,6 +13,7 @@ def create_app(config_class=Config):
 
     CORS(app)
     db.init_app(app)
+    Swagger(app, config=SWAGGER_CONFIG, template=SWAGGER_TEMPLATE)
 
     from .routes import register_routes
 
