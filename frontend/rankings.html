@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rally Timing - Rankings</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="container">
+        <div class="page-header">
+            <h1>Rankings</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="filter-category" onchange="loadRankings()">
+                        <option value="">Todas</option>
+                        <option value="N">N</option>
+                        <option value="A">A</option>
+                        <option value="R">R</option>
+                        <option value="WRC">WRC</option>
+                        <option value="Libre">Libre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Condicion</label>
+                    <select id="filter-condition" onchange="loadRankings()">
+                        <option value="">Todas</option>
+                        <option value="dry">Seco</option>
+                        <option value="wet">Mojado</option>
+                        <option value="humid">Humedo</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rankings Table -->
+        <div class="card">
+            <h3>Mejores Tiempos por Piloto</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Piloto</th>
+                            <th>Auto</th>
+                            <th>Mejor Tiempo</th>
+                            <th>Categoria</th>
+                            <th>Condicion</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankings-table">
+                        <tr><td colspan="7" class="empty-state">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <h3>Comparativa de Tiempos</h3>
+            <div class="chart-container">
+                <canvas id="rankings-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Records -->
+        <div class="card">
+            <h3>Records del Tramo</h3>
+            <div id="records-section">
+                <p class="empty-state">Cargando records...</p>
+            </div>
+        </div>
+
+        <!-- Pilot History -->
+        <div class="card">
+            <h3>Progresion de Piloto</h3>
+            <div class="form-group">
+                <select id="history-pilot" onchange="loadPilotHistory()">
+                    <option value="">Seleccionar piloto...</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="history-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="lib/chart.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/rankings.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rally Timing - Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="container">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+        </div>
+
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pilots">-</div>
+                <div class="stat-label">Pilotos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-cars">-</div>
+                <div class="stat-label">Autos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-runs">-</div>
+                <div class="stat-label">Pasadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-record">--:--.---</div>
+                <div class="stat-label">Record del Tramo</div>
+            </div>
+        </div>
+
+        <div class="card" id="record-card" style="display:none;">
+            <h3>Record Actual</h3>
+            <p id="record-detail"></p>
+        </div>
+
+        <div class="card">
+            <h3>Ultimas Pasadas</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Piloto</th>
+                            <th>Auto</th>
+                            <th>Tiempo</th>
+                            <th>Condicion</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="latest-runs">
+                        <tr><td colspan="5" class="empty-state">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        async function loadDashboard() {
+            try {
+                const summary = await RankingsAPI.summary();
+
+                document.getElementById('stat-pilots').textContent = summary.total_pilots;
+                document.getElementById('stat-cars').textContent = summary.total_cars;
+                document.getElementById('stat-runs').textContent = summary.total_runs;
+
+                if (summary.record) {
+                    document.getElementById('stat-record').textContent = formatTime(summary.record.best_time_ms);
+                    document.getElementById('record-card').style.display = 'block';
+                    document.getElementById('record-detail').innerHTML =
+                        `<strong>${summary.record.pilot_name}</strong> - ${summary.record.car_name} - ` +
+                        `<span class="time-cell">${formatTime(summary.record.best_time_ms)}</span> (${summary.record.run_date})`;
+                }
+
+                const tbody = document.getElementById('latest-runs');
+                if (summary.latest_runs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay pasadas registradas</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = summary.latest_runs.map(run => `
+                    <tr>
+                        <td>${run.pilot_name || '-'}</td>
+                        <td>${run.car_name || '-'}</td>
+                        <td class="time-cell">${formatTime(run.total_time_ms)}</td>
+                        <td><span class="badge badge-${run.track_condition}">${CONDITION_LABELS[run.track_condition] || run.track_condition}</span></td>
+                        <td>${run.run_date}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

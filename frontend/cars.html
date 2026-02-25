@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rally Timing - Autos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="container">
+        <div class="page-header">
+            <h1>Autos</h1>
+            <button class="btn btn-primary" onclick="openCarModal()">+ Agregar Auto</button>
+        </div>
+
+        <div class="card">
+            <div class="form-row" style="margin-bottom:1rem;">
+                <div class="form-group">
+                    <select id="filter-category" onchange="loadCars()">
+                        <option value="">Todas las categorias</option>
+                        <option value="N">N</option>
+                        <option value="A">A</option>
+                        <option value="R">R</option>
+                        <option value="WRC">WRC</option>
+                        <option value="Libre">Libre</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Marca / Modelo</th>
+                            <th>Ano</th>
+                            <th>Categoria</th>
+                            <th>Piloto</th>
+                            <th>Patente</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cars-table">
+                        <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="car-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="car-modal-title">Agregar Auto</h2>
+                <button class="modal-close" onclick="closeCarModal()">&times;</button>
+            </div>
+            <form id="car-form" onsubmit="saveCar(event)">
+                <input type="hidden" id="car-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Marca *</label>
+                        <input type="text" id="car-brand" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Modelo *</label>
+                        <input type="text" id="car-model" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ano</label>
+                        <input type="number" id="car-year" min="1960" max="2030">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria *</label>
+                        <select id="car-category" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="N">N</option>
+                            <option value="A">A</option>
+                            <option value="R">R</option>
+                            <option value="WRC">WRC</option>
+                            <option value="Libre">Libre</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Piloto asignado</label>
+                        <select id="car-pilot">
+                            <option value="">Sin asignar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Patente</label>
+                        <input type="text" id="car-plate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea id="car-notes"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCarModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/cars.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rally Timing - Pasadas</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="container">
+        <div class="page-header">
+            <h1>Registrar Pasada</h1>
+        </div>
+
+        <div class="card">
+            <form id="run-form" onsubmit="saveRun(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Piloto *</label>
+                        <select id="run-pilot" required onchange="loadCarsForPilot()">
+                            <option value="">Seleccionar piloto...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Auto *</label>
+                        <select id="run-car" required>
+                            <option value="">Seleccionar auto...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <input type="date" id="run-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Condicion del tramo *</label>
+                        <div class="radio-group" style="margin-top:0.5rem;">
+                            <label><input type="radio" name="condition" value="dry" checked> Seco</label>
+                            <label><input type="radio" name="condition" value="wet"> Mojado</label>
+                            <label><input type="radio" name="condition" value="humid"> Humedo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time entry tabs -->
+                <div class="card" style="margin-top:0.5rem;">
+                    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+                        <button type="button" class="btn btn-primary btn-sm" id="tab-manual" onclick="switchTab('manual')">Entrada Manual</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="tab-stopwatch" onclick="switchTab('stopwatch')">Cronometro</button>
+                    </div>
+
+                    <!-- Manual entry -->
+                    <div id="panel-manual">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Minutos</label>
+                                <input type="number" id="time-min" min="0" max="59" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Segundos</label>
+                                <input type="number" id="time-sec" min="0" max="59" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Milisegundos</label>
+                                <input type="number" id="time-ms" min="0" max="999" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stopwatch -->
+                    <div id="panel-stopwatch" style="display:none;">
+                        <div class="stopwatch">
+                            <div class="stopwatch-display" id="sw-display">00:00.000</div>
+                            <button type="button" class="btn btn-primary stopwatch-btn" id="sw-btn" onclick="toggleStopwatch()">INICIAR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="run-source" value="manual">
+
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea id="run-notes" placeholder="Observaciones de la pasada..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Guardar Pasada</button>
+            </form>
+        </div>
+
+        <!-- Today's runs -->
+        <div class="card">
+            <h3>Pasadas de Hoy</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Piloto</th>
+                            <th>Auto</th>
+                            <th>Tiempo</th>
+                            <th>Condicion</th>
+                            <th>Fuente</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="today-runs">
+                        <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/runs.js"></script>
+</body>
+</html>
