@@ -8,13 +8,14 @@ Sistema digital de cronometraje y ranking para rally amateur. Primer sistema aut
 
 ### Caracteristicas principales
 
-- Registro y gestion de pilotos y autos
+- Registro y gestion de pilotos, autos y categorias
 - Cronometraje dual: entrada manual + cronometro integrado en webapp
-- Ranking digital con filtros por categoria, condicion del tramo y fecha
+- Sistema de penalizaciones: agregar/quitar penalizaciones por pasada con motivo y tiempo adicional
+- Ranking digital con filtros por categoria, condicion del tramo y fecha (usa tiempo final con penalizaciones)
 - Dashboard con estadisticas y graficos (Chart.js)
 - Almacenamiento local en SQLite (archivo unico, facil de respaldar)
 - Preparado para sincronizacion a la nube cuando haya internet
-- Interfaz web responsive (mobile-first) en espanol
+- Interfaz web responsive (mobile-first, dark theme) en espanol
 
 ---
 
@@ -40,11 +41,12 @@ Sistema digital de cronometraje y ranking para rally amateur. Primer sistema aut
 │                                                      │
 │  ┌──────────────┐       ┌──────────────────────┐    │
 │  │ Flask API     │       │ HTTP Server           │    │
-│  │ puerto 5000   │       │ puerto 8080           │    │
+│  │ puerto 5050   │       │ puerto 8080           │    │
 │  │               │       │                       │    │
 │  │ /api/pilots   │       │ index.html (dashboard)│    │
 │  │ /api/cars     │       │ pilots.html           │    │
-│  │ /api/runs     │       │ cars.html             │    │
+│  │ /api/categories│      │ cars.html             │    │
+│  │ /api/runs     │       │ categories.html       │    │
 │  │ /api/rankings │       │ runs.html (cronometro)│    │
 │  └──────┬───────┘       │ rankings.html         │    │
 │         │                └──────────┬────────────┘    │
@@ -83,7 +85,8 @@ rally-timing/
 │   │   │   ├── __init__.py      # Blueprint registration
 │   │   │   ├── pilots.py        # CRUD /api/pilots
 │   │   │   ├── cars.py          # CRUD /api/cars
-│   │   │   ├── runs.py          # CRUD /api/runs
+│   │   │   ├── categories.py    # CRUD /api/categories
+│   │   │   ├── runs.py          # CRUD /api/runs + penalizaciones
 │   │   │   └── rankings.py      # GET /api/rankings/*
 │   │   └── services/
 │   │       ├── __init__.py
@@ -101,7 +104,8 @@ rally-timing/
 │   ├── index.html               # Dashboard principal
 │   ├── pilots.html              # Gestion de pilotos
 │   ├── cars.html                # Gestion de autos
-│   ├── runs.html                # Registro de pasadas + cronometro
+│   ├── categories.html          # Gestion de categorias
+│   ├── runs.html                # Registro de pasadas + cronometro + penalizaciones
 │   ├── rankings.html            # Rankings y graficos
 │   ├── css/
 │   │   └── styles.css           # Estilos mobile-first
@@ -109,7 +113,8 @@ rally-timing/
 │   │   ├── api.js               # Cliente API centralizado (fetch wrapper)
 │   │   ├── pilots.js            # Logica pagina pilotos
 │   │   ├── cars.js              # Logica pagina autos
-│   │   ├── runs.js              # Logica pasadas + cronometro
+│   │   ├── categories.js        # Logica pagina categorias
+│   │   ├── runs.js              # Logica pasadas + cronometro + penalizaciones
 │   │   ├── rankings.js          # Logica rankings + Chart.js
 │   │   └── utils.js             # Formateo de tiempos, helpers
 │   └── lib/
@@ -128,14 +133,14 @@ rally-timing/
 ### Modelo Entidad-Relacion
 
 ```
-┌──────────┐       ┌──────────┐       ┌──────────┐
-│  pilots   │──1:N──│   cars   │       │ sync_log │
-│           │       │          │       │          │
-│ id (PK)   │       │ id (PK)  │       │ id (PK)  │
-│ first_name│       │ brand    │       │ table    │
-│ last_name │       │ model    │       │ record_id│
-│ nickname  │       │ year     │       │ action   │
-│ phone     │       │ category │       │ synced   │
+┌──────────┐       ┌──────────┐       ┌──────────┐   ┌────────────┐
+│  pilots   │──1:N──│   cars   │       │ sync_log │   │ categories │
+│           │       │          │       │          │   │            │
+│ id (PK)   │       │ id (PK)  │       │ id (PK)  │   │ id (PK)    │
+│ first_name│       │ brand    │       │ table    │   │ name       │
+│ last_name │       │ model    │       │ record_id│   │ description│
+│ nickname  │       │ year     │       │ action   │   │ is_active  │
+│ phone     │       │ category │       │ synced   │   └────────────┘
 │ email     │       │ pilot_id │       └──────────┘
 │ license_no│       │ (FK)     │
 │ notes     │       └─────┬────┘
@@ -145,20 +150,22 @@ rally-timing/
       │       ┌───────────┘
       │       │
       ▼       ▼
-   ┌──────────────┐
-   │     runs      │
-   │               │
-   │ id (PK)       │
-   │ pilot_id (FK) │
-   │ car_id (FK)   │
-   │ run_date      │
-   │ total_time_ms │  ← Milisegundos (INTEGER)
-   │ track_condition│  ← dry / wet / humid
-   │ car_category  │  ← Copia historica
+   ┌──────────────┐         ┌──────────────┐
+   │     runs      │──1:N───│  penalties    │
+   │               │         │              │
+   │ id (PK)       │         │ id (PK)      │
+   │ pilot_id (FK) │         │ run_id (FK)  │
+   │ car_id (FK)   │         │ time_ms      │  ← Tiempo adicional
+   │ run_date      │         │ reason       │  ← Motivo
+   │ total_time_ms │         └──────────────┘
+   │ track_condition│
+   │ car_category  │
    │ notes         │
    │ is_valid      │
-   │ source        │  ← manual / stopwatch
+   │ source        │
    └───────────────┘
+
+   final_time_ms = total_time_ms + SUM(penalties.time_ms)
 ```
 
 ### Decisiones de diseno
@@ -171,6 +178,9 @@ rally-timing/
 | Rankings computados al vuelo | Con <1000 registros, Pandas calcula rankings instantaneamente. No necesita tabla cache |
 | `source` en runs | Distinguir si el tiempo fue ingresado manualmente o via cronometro. Util para control de calidad de datos |
 | `sync_log` | Registra cada operacion para futura sincronizacion a la nube |
+| Categorias dinamicas | Tabla `categories` permite al usuario definir sus propias categorias en lugar de tenerlas hardcodeadas |
+| Penalizaciones como tabla separada | Una pasada puede tener N penalizaciones. `final_time_ms` se computa dinamicamente (`total_time_ms + SUM(penalties)`) en lugar de almacenarse, manteniendo la integridad de los datos |
+| Rankings usan `final_time_ms` | Todos los calculos de ranking incluyen penalizaciones, reflejando el tiempo real de competencia |
 
 ### Schema SQL
 
@@ -204,6 +214,15 @@ CREATE TABLE IF NOT EXISTS cars (
     FOREIGN KEY (pilot_id) REFERENCES pilots(id)
 );
 
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pilot_id INTEGER NOT NULL,
@@ -223,6 +242,15 @@ CREATE TABLE IF NOT EXISTS runs (
     FOREIGN KEY (car_id) REFERENCES cars(id)
 );
 
+CREATE TABLE IF NOT EXISTS penalties (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL,
+    time_ms INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (run_id) REFERENCES runs(id)
+);
+
 CREATE TABLE IF NOT EXISTS sync_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     table_name TEXT NOT NULL,
@@ -237,6 +265,7 @@ CREATE INDEX IF NOT EXISTS idx_runs_pilot ON runs(pilot_id);
 CREATE INDEX IF NOT EXISTS idx_runs_date ON runs(run_date);
 CREATE INDEX IF NOT EXISTS idx_runs_condition ON runs(track_condition);
 CREATE INDEX IF NOT EXISTS idx_runs_category ON runs(car_category);
+CREATE INDEX IF NOT EXISTS idx_penalties_run ON penalties(run_id);
 CREATE INDEX IF NOT EXISTS idx_sync_pending ON sync_log(synced) WHERE synced = 0;
 ```
 
@@ -244,7 +273,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_pending ON sync_log(synced) WHERE synced = 0
 
 ## API REST
 
-Base URL: `http://<ip-raspberry>:5000/api`
+Base URL: `http://<ip-raspberry>:5050/api`
 
 Formato de respuesta estandar:
 ```json
@@ -275,15 +304,33 @@ Formato de respuesta estandar:
 | PUT | `/api/cars/<id>` | Actualizar auto |
 | DELETE | `/api/cars/<id>` | Desactivar auto (soft delete) |
 
+### Categorias
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| GET | `/api/categories` | Listar categorias activas. Filtro: `?search=nombre` |
+| GET | `/api/categories/<id>` | Detalle de categoria |
+| POST | `/api/categories` | Crear categoria (nombre unico) |
+| PUT | `/api/categories/<id>` | Actualizar categoria |
+| DELETE | `/api/categories/<id>` | Desactivar categoria (soft delete) |
+
 ### Pasadas (Runs)
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
 | GET | `/api/runs` | Listar pasadas. Filtros: `?pilot_id=`, `?date=`, `?condition=`, `?category=` |
-| GET | `/api/runs/<id>` | Detalle de pasada |
+| GET | `/api/runs/<id>` | Detalle de pasada (incluye penalizaciones) |
 | POST | `/api/runs` | Registrar pasada (manual o cronometro) |
 | PUT | `/api/runs/<id>` | Corregir pasada |
 | DELETE | `/api/runs/<id>` | Invalidar pasada |
+
+### Penalizaciones (anidadas bajo pasadas)
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| GET | `/api/runs/<id>/penalties` | Listar penalizaciones de una pasada |
+| POST | `/api/runs/<id>/penalties` | Agregar penalizacion (time_ms + reason) |
+| DELETE | `/api/runs/<id>/penalties/<pid>` | Quitar penalizacion |
 
 **Body de ejemplo para POST /api/runs:**
 ```json
@@ -328,18 +375,25 @@ Formato de respuesta estandar:
 #### 3. Autos (`cars.html`)
 - Tabla con marca, modelo, categoria, piloto asignado
 - CRUD con formulario/modal
-- Filtro por categoria
+- Filtro por categoria (cargado dinamicamente desde la API de categorias)
 
-#### 4. Pasadas (`runs.html`) - **Pagina principal**
-- Seleccion de piloto y auto (dropdowns)
+#### 4. Categorias (`categories.html`)
+- Tabla con nombre y descripcion de categoria
+- CRUD con modal (nombre unico, validacion case-insensitive)
+- Las categorias definidas aqui aparecen en los selects de autos y filtros de rankings
+
+#### 5. Pasadas (`runs.html`) - **Pagina principal**
+- Seleccion de piloto y auto (dropdowns con agrupacion por piloto)
 - Fecha (default: hoy), condicion del tramo (radio buttons)
 - **Dos modos de ingreso de tiempo:**
   - **Manual:** campos minutos / segundos / milisegundos
-  - **Cronometro:** boton grande START/STOP con display en tiempo real
+  - **Cronometro:** boton grande INICIAR/DETENER con display en tiempo real
 - Notas (textarea)
-- Tabla de pasadas del dia actual
+- Tabla de pasadas del dia actual con columnas: Piloto, Auto, Tiempo, Penalizacion, Tiempo Final, Condicion, Acciones
+- **Modal de penalizaciones:** desde cada pasada se pueden agregar/quitar penalizaciones indicando tiempo adicional (min/seg/ms) y motivo
+- El tiempo final (`final_time_ms`) se muestra resaltado cuando hay penalizaciones
 
-#### 5. Rankings (`rankings.html`)
+#### 6. Rankings (`rankings.html`)
 - Filtros: categoria, condicion, rango de fechas
 - Tabla de ranking (posicion, piloto, auto, mejor tiempo, fecha)
 - Grafico de barras: mejores tiempos por piloto
@@ -376,7 +430,7 @@ function stopStopwatch() {
 1. La Raspberry Pi crea red WiFi propia con `hostapd` + `dnsmasq`
    - SSID: `RallyLab`
    - Sin internet, solo red local
-2. Flask corre en puerto 5000 (API)
+2. Flask corre en puerto 5050 (API)
 3. Frontend servido en puerto 8080 (`python -m http.server`)
 4. Usuarios se conectan al WiFi y abren `http://192.168.4.1:8080`
 
@@ -422,28 +476,30 @@ Abrir `http://localhost:8080`
 
 ## Plan de Implementacion por Fases
 
-### Fase 1 - Fundacion (Semana 1)
+### Fase 1 - Fundacion
 - [x] Crear estructura de carpetas y README
-- [ ] Inicializar git, .gitignore, requirements.txt, .env.example
-- [ ] Flask app factory con CORS y health check
-- [ ] Schema SQLite + modelos SQLAlchemy
-- [ ] CRUD Pilotos (API + pagina frontend)
-- [ ] CRUD Autos (API + pagina frontend)
+- [x] Inicializar git, .gitignore, requirements.txt, .env.example
+- [x] Flask app factory con CORS y health check
+- [x] Schema SQLite + modelos SQLAlchemy
+- [x] CRUD Pilotos (API + pagina frontend)
+- [x] CRUD Autos (API + pagina frontend)
+- [x] CRUD Categorias (API + pagina frontend)
 
-### Fase 2 - Core (Semana 2)
-- [ ] CRUD Pasadas con entrada manual de tiempo
-- [ ] Cronometro integrado en frontend
-- [ ] Validaciones frontend y backend
+### Fase 2 - Core
+- [x] CRUD Pasadas con entrada manual de tiempo
+- [x] Cronometro integrado en frontend
+- [x] Validaciones frontend y backend
+- [x] Sistema de penalizaciones (agregar/quitar por pasada, con motivo)
 
-### Fase 3 - Rankings y Dashboard (Semana 3)
-- [ ] Servicio de rankings con Pandas
-- [ ] API endpoints de rankings
-- [ ] Pagina rankings con Chart.js
-- [ ] Dashboard con estadisticas
+### Fase 3 - Rankings y Dashboard
+- [x] Servicio de rankings con Pandas (usa final_time_ms con penalizaciones)
+- [x] API endpoints de rankings
+- [x] Pagina rankings con Chart.js
+- [x] Dashboard con estadisticas
 
-### Fase 4 - Deployment (Semana 4)
-- [ ] Scripts para Raspberry Pi (setup WiFi, auto-start, backup)
-- [ ] Infraestructura de sync_log
+### Fase 4 - Deployment
+- [x] Scripts para Raspberry Pi (setup WiFi, auto-start, backup)
+- [x] Infraestructura de sync_log
 - [ ] Prueba real en el tramo con 2 pilotos
 
 ### Futuro (post-MVP)
